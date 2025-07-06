@@ -1,0 +1,9 @@
+
+body{
+    background-color:#fff !important;
+    overflow-x: hidden;
+}
+
+.login_content {
+    text-align: left !important;
+}
