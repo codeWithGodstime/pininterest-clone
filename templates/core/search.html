@@ -1,0 +1,267 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Search - Pinterest Clone{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px;">
+  <!-- Search Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="fw-bold">Search Results</h2>
+      {% if query %}
+        <p class="text-muted">Results for "{{ query }}"</p>
+      {% else %}
+        <p class="text-muted">Enter a search term to find pins, boards, and users</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="row mb-4">
+    <div class="col-md-8 mx-auto">
+      <form method="get" class="d-flex">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fas fa-search text-muted"></i>
+          </span>
+          <input type="text" name="q" class="form-control border-start-0" 
+                 placeholder="Search pins, boards, or users..." 
+                 value="{{ query }}">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search me-1"></i>Search
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if query %}
+    <!-- Search Results -->
+    {% if pins or boards or users %}
+      <!-- Pins Results -->
+      {% if pins %}
+        <div class="mb-5">
+          <h4 class="fw-bold mb-3">
+            <i class="fas fa-thumbtack me-2"></i>Pins ({{ pins.count }})
+          </h4>
+          <div class="row" id="search-pins-masonry">
+            {% for pin in pins %}
+            <div class="col-6 col-md-4 col-lg-3 mb-4">
+              <div class="card pin-card" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="position-relative">
+                  <img src="{{ pin.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ pin.title }}">
+                  <div class="pin-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s;">
+                    <div class="d-flex gap-2">
+                      <a href="{% url 'pin_detail' pin.pk %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-eye me-1"></i>View
+                      </a>
+                      {% if user.is_authenticated %}
+                        <button class="btn btn-light btn-sm save-pin-btn" data-pin-id="{{ pin.pk }}">
+                          <i class="fas fa-thumbtack me-1"></i>Save
+                        </button>
+                        <button class="btn btn-light btn-sm like-pin-btn" data-pin-id="{{ pin.pk }}">
+                          <i class="fas fa-heart me-1"></i>Like
+                        </button>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body p-3">
+                  <h6 class="card-title fw-bold mb-1">{{ pin.title|truncatechars:30 }}</h6>
+                  {% if pin.description %}
+                    <p class="card-text text-muted small mb-2">{{ pin.description|truncatewords:8 }}</p>
+                  {% endif %}
+                  
+                  <!-- Tags -->
+                  {% if pin.tags.all %}
+                  <div class="mb-2">
+                    {% for tag in pin.tags.all|slice:":3" %}
+                      <a href="{% url 'tag_detail' tag.pk %}" class="badge bg-light text-dark text-decoration-none me-1">
+                        #{{ tag.name }}
+                      </a>
+                    {% endfor %}
+                    {% if pin.tags.count > 3 %}
+                      <small class="text-muted">+{{ pin.tags.count|add:"-3" }} more</small>
+                    {% endif %}
+                  </div>
+                  {% endif %}
+                  
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                      <img src="https://i.pravatar.cc/24?img={{ pin.owner.id }}" class="rounded-circle me-2" width="24" height="24" alt="{{ pin.owner.username }}">
+                      <small class="text-muted">{{ pin.owner.username }}</small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <small class="text-muted like-count" data-pin-id="{{ pin.pk }}">
+                        <i class="fas fa-heart text-danger me-1"></i>{{ pin.like_set.count }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Boards Results -->
+      {% if boards %}
+        <div class="mb-5">
+          <h4 class="fw-bold mb-3">
+            <i class="fas fa-folder me-2"></i>Boards ({{ boards.count }})
+          </h4>
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            {% for board in boards %}
+            <div class="col">
+              <div class="card board-card h-100" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-0">
+                  <!-- Board Cover Image -->
+                  <div class="position-relative" style="height: 200px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4);">
+                    {% if board.image %}
+                      <img src="{{ board.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ board.title }}">
+                    {% endif %}
+                    <div class="position-absolute top-0 end-0 p-2">
+                      {% if board.privacy == 'private' %}
+                        <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Private</span>
+                      {% else %}
+                        <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <!-- Board Info -->
+                  <div class="p-3">
+                    <h5 class="card-title fw-bold mb-1">{{ board.title }}</h5>
+                    {% if board.description %}
+                      <p class="card-text text-muted small mb-2">{{ board.description|truncatewords:10 }}</p>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div class="d-flex align-items-center">
+                        <img src="https://i.pravatar.cc/32?img={{ board.owner.id }}" class="rounded-circle me-2" width="32" height="32" alt="{{ board.owner.username }}">
+                        <small class="text-muted">{{ board.owner.username }}</small>
+                      </div>
+                      <small class="text-muted">{{ board.pin_count }} pins</small>
+                    </div>
+                    
+                    <div class="mt-3">
+                      <a href="{% url 'board_detail' board.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                        View Board
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Users Results -->
+      {% if users %}
+        <div class="mb-5">
+          <h4 class="fw-bold mb-3">
+            <i class="fas fa-users me-2"></i>Users ({{ users.count }})
+          </h4>
+          <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            {% for user_result in users %}
+            <div class="col">
+              <div class="card user-card h-100" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+                <div class="card-body p-4 text-center">
+                  <img src="https://i.pravatar.cc/80?img={{ user_result.id }}" class="rounded-circle mb-3" width="80" height="80" alt="{{ user_result.username }}">
+                  <h5 class="fw-bold mb-1">{{ user_result.username }}</h5>
+                  <p class="text-muted small mb-3">Member since {{ user_result.date_joined|date:"M Y" }}</p>
+                  <a href="{% url 'user_profile' user_result.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-user me-1"></i>View Profile
+                  </a>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <!-- No Results -->
+      <div class="text-center py-5">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <h4 class="text-muted">No results found for "{{ query }}"</h4>
+        <p class="text-muted">Try adjusting your search terms or browse our popular content</p>
+        <div class="d-flex gap-2 justify-content-center">
+          <a href="{% url 'pin_list' %}" class="btn btn-primary">
+            <i class="fas fa-thumbtack me-2"></i>Browse Pins
+          </a>
+          <a href="{% url 'board_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-folder me-2"></i>Browse Boards
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Empty Search State -->
+    <div class="text-center py-5">
+      <i class="fas fa-search fa-3x text-muted mb-3"></i>
+      <h4 class="text-muted">Start searching</h4>
+      <p class="text-muted">Enter keywords to find pins, boards, and users</p>
+    </div>
+  {% endif %}
+</div>
+
+<style>
+.pin-card:hover, .board-card:hover, .user-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+.pin-card:hover .pin-overlay {
+  opacity: 1 !important;
+}
+</style>
+
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Masonry for pins
+  var grid = document.querySelector('#search-pins-masonry');
+  if (grid) {
+    var masonry = new Masonry(grid, {
+      itemSelector: '.col-6',
+      columnWidth: '.col-6',
+      percentPosition: true
+    });
+  }
+
+  // Like functionality
+  document.querySelectorAll('.like-pin-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pinId = this.dataset.pinId;
+      var likeCount = document.querySelector('.like-count[data-pin-id="' + pinId + '"]');
+      
+      fetch('/pins/' + pinId + '/toggle_like/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.liked) {
+          this.innerHTML = '<i class="fas fa-heart text-danger me-1"></i>Liked';
+          this.classList.add('btn-danger');
+          this.classList.remove('btn-light');
+        } else {
+          this.innerHTML = '<i class="fas fa-heart me-1"></i>Like';
+          this.classList.remove('btn-danger');
+          this.classList.add('btn-light');
+        }
+        likeCount.innerHTML = '<i class="fas fa-heart text-danger me-1"></i>' + data.like_count;
+      });
+    });
+  });
+});
+</script>
+{% endblock %} 

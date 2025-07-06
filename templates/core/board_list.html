@@ -1,0 +1,124 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Boards - Pinterest Clone{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px;">
+  <div class="row mb-4">
+    <div class="col">
+      <h2 class="fw-bold">Boards</h2>
+      <p class="text-muted">Discover amazing collections and organize your ideas</p>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="col-auto">
+      <a href="{% url 'board_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create Board
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if boards %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for board in boards %}
+    <div class="col">
+      <div class="card h-100 board-card" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+        <div class="card-body p-0">
+          <!-- Board Cover Image -->
+          <div class="position-relative" style="height: 200px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4);">
+            {% if board.image %}
+              <img src="{{ board.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ board.title }}">
+            {% endif %}
+            <div class="position-absolute top-0 end-0 p-2">
+              {% if board.privacy == 'private' %}
+                <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Private</span>
+              {% else %}
+                <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+              {% endif %}
+            </div>
+          </div>
+          
+          <!-- Board Info -->
+          <div class="p-3">
+            <h5 class="card-title fw-bold mb-1">{{ board.title }}</h5>
+            {% if board.description %}
+              <p class="card-text text-muted small mb-2">{{ board.description|truncatewords:10 }}</p>
+            {% endif %}
+            
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <img src="https://i.pravatar.cc/32?img={{ board.owner.id }}" class="rounded-circle me-2" width="32" height="32" alt="{{ board.owner.username }}">
+                <small class="text-muted">{{ board.owner.username }}</small>
+              </div>
+              <small class="text-muted">{{ board.pin_count }} pins</small>
+            </div>
+            
+            <div class="mt-3">
+              <a href="{% url 'board_detail' board.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                View Board
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <nav aria-label="Board pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page=1">&laquo; First</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+      {% endif %}
+
+      <li class="page-item active">
+        <span class="page-link">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No boards found</h4>
+    <p class="text-muted">Be the first to create a board!</p>
+    {% if user.is_authenticated %}
+      <a href="{% url 'board_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create Your First Board
+      </a>
+    {% else %}
+      <a href="{% url 'account_login' %}" class="btn btn-primary">
+        <i class="fas fa-sign-in-alt me-2"></i>Sign In to Create Boards
+      </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.board-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %} 

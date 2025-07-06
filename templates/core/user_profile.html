@@ -1,0 +1,264 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} - Pinterest Clone{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px;">
+  <!-- User Profile Header -->
+  <div class="row mb-4">
+    <div class="col">
+      <div class="card" style="border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <div class="col-auto">
+              <img src="https://i.pravatar.cc/100?img={{ profile_user.id }}" class="rounded-circle" width="100" height="100" alt="{{ profile_user.username }}">
+            </div>
+            <div class="col">
+              <h2 class="fw-bold mb-1">{{ profile_user.username }}</h2>
+              <p class="text-muted mb-2">
+                {% if profile_user.email %}
+                  {{ profile_user.email }}
+                {% else %}
+                  Member since {{ profile_user.date_joined|date:"M Y" }}
+                {% endif %}
+              </p>
+              <div class="d-flex gap-3">
+                <div class="text-center">
+                  <div class="fw-bold">{{ boards.count }}</div>
+                  <small class="text-muted">Boards</small>
+                </div>
+                <div class="text-center">
+                  <div class="fw-bold">{{ pins.count }}</div>
+                  <small class="text-muted">Pins</small>
+                </div>
+              </div>
+            </div>
+            {% if is_own_profile %}
+            <div class="col-auto">
+              <a href="{% url 'board_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Create Board
+              </a>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="boards-tab" data-bs-toggle="tab" data-bs-target="#boards" type="button" role="tab">
+        <i class="fas fa-folder me-2"></i>Boards
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="pins-tab" data-bs-toggle="tab" data-bs-target="#pins" type="button" role="tab">
+        <i class="fas fa-thumbtack me-2"></i>Pins
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Content -->
+  <div class="tab-content" id="profileTabContent">
+    <!-- Boards Tab -->
+    <div class="tab-pane fade show active" id="boards" role="tabpanel">
+      {% if boards %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+          {% for board in boards %}
+          <div class="col">
+            <div class="card board-card h-100" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+              <div class="card-body p-0">
+                <!-- Board Cover Image -->
+                <div class="position-relative" style="height: 200px; background: linear-gradient(45deg, #ff6b6b, #4ecdc4);">
+                  {% if board.image %}
+                    <img src="{{ board.image.url }}" class="w-100 h-100" style="object-fit: cover;" alt="{{ board.title }}">
+                  {% endif %}
+                  <div class="position-absolute top-0 end-0 p-2">
+                    {% if board.privacy == 'private' %}
+                      <span class="badge bg-secondary"><i class="fas fa-lock me-1"></i>Private</span>
+                    {% else %}
+                      <span class="badge bg-success"><i class="fas fa-globe me-1"></i>Public</span>
+                    {% endif %}
+                  </div>
+                </div>
+                
+                <!-- Board Info -->
+                <div class="p-3">
+                  <h5 class="card-title fw-bold mb-1">{{ board.title }}</h5>
+                  {% if board.description %}
+                    <p class="card-text text-muted small mb-2">{{ board.description|truncatewords:10 }}</p>
+                  {% endif %}
+                  
+                  <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">{{ board.pin_count }} pins</small>
+                  </div>
+                  
+                  <div class="mt-3">
+                    <a href="{% url 'board_detail' board.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                      View Board
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No boards yet</h4>
+          <p class="text-muted">
+            {% if is_own_profile %}
+              Start organizing your ideas by creating your first board!
+            {% else %}
+              This user hasn't created any public boards yet.
+            {% endif %}
+          </p>
+          {% if is_own_profile %}
+            <a href="{% url 'board_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Create Your First Board
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Pins Tab -->
+    <div class="tab-pane fade" id="pins" role="tabpanel">
+      {% if pins %}
+        <div class="row" id="profile-pins-masonry">
+          {% for pin in pins %}
+          <div class="col-6 col-md-4 col-lg-3 mb-4">
+            <div class="card pin-card" style="border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: transform 0.2s, box-shadow 0.2s;">
+              <div class="position-relative">
+                <img src="{{ pin.image.url }}" class="card-img-top" style="height: 200px; object-fit: cover;" alt="{{ pin.title }}">
+                <div class="pin-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s;">
+                  <div class="d-flex gap-2">
+                    <a href="{% url 'pin_detail' pin.pk %}" class="btn btn-light btn-sm">
+                      <i class="fas fa-eye me-1"></i>View
+                    </a>
+                    {% if user.is_authenticated %}
+                      <button class="btn btn-light btn-sm save-pin-btn" data-pin-id="{{ pin.pk }}">
+                        <i class="fas fa-thumbtack me-1"></i>Save
+                      </button>
+                      <button class="btn btn-light btn-sm like-pin-btn" data-pin-id="{{ pin.pk }}">
+                        <i class="fas fa-heart me-1"></i>Like
+                      </button>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="card-body p-3">
+                <h6 class="card-title fw-bold mb-1">{{ pin.title|truncatechars:30 }}</h6>
+                {% if pin.description %}
+                  <p class="card-text text-muted small mb-2">{{ pin.description|truncatewords:8 }}</p>
+                {% endif %}
+                
+                <!-- Tags -->
+                {% if pin.tags.all %}
+                <div class="mb-2">
+                  {% for tag in pin.tags.all|slice:":3" %}
+                    <a href="{% url 'tag_detail' tag.pk %}" class="badge bg-light text-dark text-decoration-none me-1">
+                      #{{ tag.name }}
+                    </a>
+                  {% endfor %}
+                  {% if pin.tags.count > 3 %}
+                    <small class="text-muted">+{{ pin.tags.count|add:"-3" }} more</small>
+                  {% endif %}
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted like-count" data-pin-id="{{ pin.pk }}">
+                      <i class="fas fa-heart text-danger me-1"></i>{{ pin.like_set.count }}
+                    </small>
+                  </div>
+                  {% if pin.board %}
+                    <small class="text-muted">{{ pin.board.title }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <i class="fas fa-thumbtack fa-3x text-muted mb-3"></i>
+          <h4 class="text-muted">No pins yet</h4>
+          <p class="text-muted">
+            {% if is_own_profile %}
+              Start sharing your inspiration by creating your first pin!
+            {% else %}
+              This user hasn't created any public pins yet.
+            {% endif %}
+          </p>
+          {% if is_own_profile %}
+            <a href="{% url 'pin_create' %}" class="btn btn-primary">
+              <i class="fas fa-plus me-2"></i>Create Your First Pin
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<style>
+.board-card:hover, .pin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+.pin-card:hover .pin-overlay {
+  opacity: 1 !important;
+}
+</style>
+
+<script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize Masonry for pins
+  var grid = document.querySelector('#profile-pins-masonry');
+  if (grid) {
+    var masonry = new Masonry(grid, {
+      itemSelector: '.col-6',
+      columnWidth: '.col-6',
+      percentPosition: true
+    });
+  }
+
+  // Like functionality
+  document.querySelectorAll('.like-pin-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pinId = this.dataset.pinId;
+      var likeCount = document.querySelector('.like-count[data-pin-id="' + pinId + '"]');
+      
+      fetch('/pins/' + pinId + '/toggle_like/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.liked) {
+          this.innerHTML = '<i class="fas fa-heart text-danger me-1"></i>Liked';
+          this.classList.add('btn-danger');
+          this.classList.remove('btn-light');
+        } else {
+          this.innerHTML = '<i class="fas fa-heart me-1"></i>Like';
+          this.classList.remove('btn-danger');
+          this.classList.add('btn-light');
+        }
+        likeCount.innerHTML = '<i class="fas fa-heart text-danger me-1"></i>' + data.like_count;
+      });
+    });
+  });
+});
+</script>
+{% endblock %} 

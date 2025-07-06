@@ -1,0 +1,158 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}
+  {% if form.instance.pk %}Edit Pin{% else %}Create Pin{% endif %} - Pinterest Clone
+{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 100px;">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      <div class="card" style="border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+        <div class="card-body p-4">
+          <div class="text-center mb-4">
+            <h2 class="fw-bold">
+              {% if form.instance.pk %}
+                <i class="fas fa-edit me-2"></i>Edit Pin
+              {% else %}
+                <i class="fas fa-plus me-2"></i>Create New Pin
+              {% endif %}
+            </h2>
+            <p class="text-muted">Share your inspiration with the world</p>
+          </div>
+
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Image Upload -->
+            <div class="mb-4">
+              <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-image me-2"></i>Image *
+              </label>
+              <div class="image-upload-container">
+                <div class="input-group">
+                  {{ form.image }}
+                </div>
+                {% if form.instance.image %}
+                  <div class="mt-2">
+                    <img src="{{ form.instance.image.url }}" class="img-thumbnail" style="max-height: 200px;" alt="Current image">
+                  </div>
+                {% endif %}
+              </div>
+              {% if form.image.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.image.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">Upload a beautiful image for your pin</div>
+            </div>
+
+            <!-- Title Field -->
+            <div class="mb-3">
+              <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-heading me-2"></i>Title *
+              </label>
+              {{ form.title }}
+              {% if form.title.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.title.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Description Field -->
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-align-left me-2"></i>Description
+              </label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.description.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">Tell people what this pin is about</div>
+            </div>
+
+            <!-- Board Field -->
+            <div class="mb-3">
+              <label for="{{ form.board.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-folder me-2"></i>Board
+              </label>
+              {{ form.board }}
+              {% if form.board.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.board.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">Choose a board to organize your pin</div>
+            </div>
+
+            <!-- Tags Field -->
+            <div class="mb-4">
+              <label for="{{ form.tags.id_for_label }}" class="form-label fw-bold">
+                <i class="fas fa-tags me-2"></i>Tags
+              </label>
+              {{ form.tags }}
+              {% if form.tags.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.tags.errors %}
+                    <i class="fas fa-exclamation-circle me-1"></i>{{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="form-text">Add tags to help people discover your pin</div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg">
+                {% if form.instance.pk %}
+                  <i class="fas fa-save me-2"></i>Update Pin
+                {% else %}
+                  <i class="fas fa-plus me-2"></i>Create Pin
+                {% endif %}
+              </button>
+              <a href="{% url 'pin_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-control, .form-select {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+.form-control:focus, .form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+.image-upload-container {
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: border-color 0.3s;
+}
+.image-upload-container:hover {
+  border-color: #007bff;
+}
+</style>
+{% endblock %} 

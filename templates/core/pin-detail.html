@@ -1,0 +1,254 @@
+{% extends 'core/base.html' %}
+{% load static %}
+  {% block css %}
+  <style>
+    .pin-detail-container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .pin-image-container {
+      position: relative;
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .pin-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .pin-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.3);
+      opacity: 0;
+      transition: opacity 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pin-image-container:hover .pin-overlay {
+      opacity: 1;
+    }
+    .pin-actions-overlay {
+      display: flex;
+      gap: 10px;
+    }
+    .pin-actions-overlay .btn {
+      border-radius: 50px;
+      padding: 12px 20px;
+      font-weight: 600;
+    }
+    .pin-info {
+      background: white;
+      border-radius: 32px;
+      padding: 24px;
+      margin-top: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    }
+    .pin-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #111;
+    }
+    .pin-description {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .pin-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .pin-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pin-user img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+    }
+    .pin-stats {
+      display: flex;
+      gap: 20px;
+      color: #666;
+    }
+    .pin-stats span {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pin-actions-bottom {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .pin-actions-bottom .btn {
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-weight: 600;
+    }
+    .related-pins {
+      margin-top: 40px;
+    }
+    .related-pins h3 {
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    .related-pin-card {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+      background: white;
+    }
+    .related-pin-card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    .related-pin-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .related-pin-info {
+      padding: 12px;
+    }
+    .related-pin-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .related-pin-user {
+      font-size: 0.8rem;
+      color: #666;
+    }
+    @media (max-width: 768px) {
+      .pin-detail-container {
+        padding: 10px;
+      }
+      .pin-image-container {
+        border-radius: 16px;
+      }
+      .pin-info {
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .pin-title {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+  {% endblock %}
+
+  {% block content %}
+  <!-- Pin Detail Content -->
+  <div class="pin-detail-container" style="margin-top: 100px;">
+    <div class="row">
+      <!-- Pin Image -->
+      <div class="col-lg-8">
+        <div class="pin-image-container">
+          <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" class="pin-image" alt="Beautiful Mountain" id="pinImage">
+          <div class="pin-overlay">
+            <div class="pin-actions-overlay">
+              <button class="btn btn-light save-btn" title="Save">
+                <i class="fas fa-thumbtack me-2"></i>Save
+              </button>
+              <button class="btn btn-light" title="Share">
+                <i class="fas fa-share me-2"></i>Share
+              </button>
+              <button class="btn btn-light" title="More">
+                <i class="fas fa-ellipsis-h"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Pin Information -->
+      <div class="col-lg-4">
+        <div class="pin-info">
+          <h1 class="pin-title" id="pinTitle">Beautiful Mountain Landscape</h1>
+          <p class="pin-description" id="pinDescription">
+            Stunning mountain view captured during golden hour. The perfect blend of nature's beauty and tranquility. 
+            This breathtaking landscape showcases the majesty of untouched wilderness.
+          </p>
+          
+          <div class="pin-meta">
+            <div class="pin-user">
+              <img src="https://i.pravatar.cc/48?img=2" alt="Alice Johnson">
+              <div>
+                <div class="fw-bold">Alice Johnson</div>
+                <small class="text-muted">Travel Enthusiast</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="pin-stats">
+            <span><i class="fas fa-heart text-danger"></i> 1.2k</span>
+            <span><i class="fas fa-comment"></i> 45</span>
+            <span><i class="fas fa-share"></i> 23</span>
+          </div>
+          
+          <div class="pin-actions-bottom">
+            <button class="btn btn-danger like-btn">
+              <i class="fas fa-heart me-2"></i>Like
+            </button>
+            <button class="btn btn-outline-secondary save-btn">
+              <i class="fas fa-thumbtack me-2"></i>Save
+            </button>
+            <button class="btn btn-outline-secondary">
+              <i class="fas fa-share me-2"></i>Share
+            </button>
+          </div>
+          
+          <div class="mb-3">
+            <label for="pinBoard" class="form-label fw-bold">Save to board</label>
+            <select class="form-select" id="pinBoard">
+              <option selected>Choose board...</option>
+              <option>Travel Inspiration</option>
+              <option>Nature Photography</option>
+              <option>Landscape Art</option>
+              <option>Create new board</option>
+            </select>
+          </div>
+          
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-flag me-1"></i>Report
+            </button>
+            <button class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-external-link-alt me-1"></i>Visit site
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Related Pins -->
+    <div class="related-pins">
+      <h3>More like this</h3>
+      <div class="row g-3" id="relatedPins">
+        <!-- Related pins will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS + Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+{% endblock %}

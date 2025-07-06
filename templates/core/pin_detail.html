@@ -1,0 +1,370 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}{{ pin.title }} - Pinterest Clone{% endblock %}
+
+{% block css %}
+<style>
+  .pin-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .pin-image-container {
+    position: relative;
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .pin-image {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .pin-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pin-image-container:hover .pin-overlay {
+    opacity: 1;
+  }
+  .pin-actions-overlay {
+    display: flex;
+    gap: 10px;
+  }
+  .pin-actions-overlay .btn {
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-weight: 600;
+  }
+  .pin-info {
+    background: white;
+    border-radius: 32px;
+    padding: 24px;
+    margin-top: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  .pin-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #111;
+  }
+  .pin-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .pin-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+  }
+  .pin-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .pin-user img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+  }
+  .pin-stats {
+    display: flex;
+    gap: 20px;
+    color: #666;
+  }
+  .pin-stats span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pin-actions-bottom {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .pin-actions-bottom .btn {
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-weight: 600;
+  }
+  .related-pins {
+    margin-top: 40px;
+  }
+  .related-pins h3 {
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  .related-pin-card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: white;
+  }
+  .related-pin-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  }
+  .related-pin-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  .related-pin-info {
+    padding: 12px;
+  }
+  .related-pin-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .related-pin-user {
+    font-size: 0.8rem;
+    color: #666;
+  }
+  @media (max-width: 768px) {
+    .pin-detail-container {
+      padding: 10px;
+    }
+    .pin-image-container {
+      border-radius: 16px;
+    }
+    .pin-info {
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .pin-title {
+      font-size: 1.25rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Pin Detail Content -->
+<div class="pin-detail-container" style="margin-top: 100px;">
+  <div class="row">
+    <!-- Pin Image -->
+    <div class="col-lg-8">
+      <div class="pin-image-container">
+        <img src="{{ pin.image.url }}" class="pin-image" alt="{{ pin.title }}" id="pinImage">
+        <div class="pin-overlay">
+          <div class="pin-actions-overlay">
+            {% if user.is_authenticated %}
+              <button class="btn btn-light save-btn" title="Save" data-bs-toggle="modal" data-bs-target="#saveModal">
+                <i class="fas fa-thumbtack me-2"></i>Save
+              </button>
+            {% endif %}
+            <button class="btn btn-light" title="Share" onclick="sharePin()">
+              <i class="fas fa-share me-2"></i>Share
+            </button>
+            <button class="btn btn-light" title="More">
+              <i class="fas fa-ellipsis-h"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Pin Information -->
+    <div class="col-lg-4">
+      <div class="pin-info">
+        <h1 class="pin-title" id="pinTitle">{{ pin.title }}</h1>
+        {% if pin.description %}
+          <p class="pin-description" id="pinDescription">{{ pin.description }}</p>
+        {% endif %}
+        
+        <!-- Tags -->
+        {% if pin.tags.all %}
+        <div class="mb-3">
+          {% for tag in pin.tags.all %}
+            <a href="{% url 'pin_list' %}?tag={{ tag.name }}" class="badge bg-light text-dark text-decoration-none me-1">
+              #{{ tag.name }}
+            </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+        
+        <div class="pin-meta">
+          <div class="pin-user">
+            <img src="https://i.pravatar.cc/48?img={{ pin.owner.id }}" alt="{{ pin.owner.username }}">
+            <div>
+              <div class="fw-bold">{{ pin.owner.username }}</div>
+              <small class="text-muted">
+                {% if pin.board %}
+                  Saved to {{ pin.board.title }}
+                {% else %}
+                  Creator
+                {% endif %}
+              </small>
+            </div>
+          </div>
+        </div>
+        
+        <div class="pin-stats">
+          <span class="like-count" data-pin-id="{{ pin.pk }}">
+            <i class="fas fa-heart text-danger"></i>
+            {{ like_count }} likes
+          </span>
+          <span>
+            <i class="fas fa-calendar"></i>
+            {{ pin.created_at|date:"M d, Y" }}
+          </span>
+        </div>
+        
+        <div class="pin-actions-bottom">
+          {% if user.is_authenticated %}
+            <button class="btn btn-outline-primary like-pin-btn" data-pin-id="{{ pin.pk }}">
+              {% if is_liked %}
+                <i class="fas fa-heart text-danger me-2"></i>Liked
+              {% else %}
+                <i class="fas fa-heart me-2"></i>Like
+              {% endif %}
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#saveModal">
+              <i class="fas fa-thumbtack me-2"></i>Save
+            </button>
+          {% else %}
+            <a href="{% url 'account_login' %}" class="btn btn-outline-primary">
+              <i class="fas fa-heart me-2"></i>Like
+            </a>
+            <a href="{% url 'account_login' %}" class="btn btn-primary">
+              <i class="fas fa-thumbtack me-2"></i>Save
+            </a>
+          {% endif %}
+          
+          {% if can_edit %}
+            <a href="{% url 'pin_edit' pin.pk %}" class="btn btn-outline-secondary">
+              <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'pin_delete' pin.pk %}" class="btn btn-outline-danger">
+              <i class="fas fa-trash me-2"></i>Delete
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Pins -->
+  {% if related_pins %}
+  <div class="related-pins">
+    <h3>More like this</h3>
+    <div class="row">
+      {% for related_pin in related_pins %}
+      <div class="col-6 col-md-4 col-lg-3 mb-4">
+        <div class="related-pin-card">
+          <a href="{% url 'pin_detail' related_pin.pk %}">
+            <img src="{{ related_pin.image.url }}" class="related-pin-img" alt="{{ related_pin.title }}">
+            <div class="related-pin-info">
+              <div class="related-pin-title">{{ related_pin.title|truncatechars:30 }}</div>
+              <div class="related-pin-user">{{ related_pin.owner.username }}</div>
+            </div>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Save Modal -->
+{% if user.is_authenticated %}
+<div class="modal fade" id="saveModal" tabindex="-1" aria-labelledby="saveModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="saveModalLabel">Save to board</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="{% url 'save_pin_to_board' pin.pk %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="board_id" class="form-label">Choose a board</label>
+            <select class="form-select" name="board_id" id="board_id" required>
+              <option value="">Select a board...</option>
+              {% for board in user.board_set.all %}
+                <option value="{{ board.pk }}">{{ board.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Save to board</button>
+            <a href="{% url 'board_create' %}" class="btn btn-outline-secondary">Create new board</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function sharePin() {
+  if (navigator.share) {
+    navigator.share({
+      title: '{{ pin.title }}',
+      text: '{{ pin.description|truncatewords:20 }}',
+      url: window.location.href
+    });
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(window.location.href).then(function() {
+      alert('Link copied to clipboard!');
+    });
+  }
+}
+
+// Like functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const likeBtn = document.querySelector('.like-pin-btn');
+  const likeCount = document.querySelector('.like-count');
+  
+  if (likeBtn) {
+    likeBtn.addEventListener('click', function() {
+      const pinId = this.dataset.pinId;
+      
+      fetch('/pins/' + pinId + '/toggle_like/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.liked) {
+          this.innerHTML = '<i class="fas fa-heart text-danger me-2"></i>Liked';
+          this.classList.add('btn-danger');
+          this.classList.remove('btn-outline-primary');
+        } else {
+          this.innerHTML = '<i class="fas fa-heart me-2"></i>Like';
+          this.classList.remove('btn-danger');
+          this.classList.add('btn-outline-primary');
+        }
+        likeCount.innerHTML = '<i class="fas fa-heart text-danger"></i> ' + data.like_count + ' likes';
+      });
+    });
+  }
+});
+</script>
+{% endblock %} 
